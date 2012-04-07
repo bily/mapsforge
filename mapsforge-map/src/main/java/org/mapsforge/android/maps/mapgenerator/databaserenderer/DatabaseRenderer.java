@@ -342,6 +342,9 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 		this.renderTheme.matchClosedWay(this, this.tagList, this.currentTile.zoomLevel);
 	}
 
+	private static float PI180 = (float) (Math.PI / 180) / 1000000.0f;
+	private static float PIx4 = (float) Math.PI * 4;
+
 	private void renderWay(Way way) {
 		this.drawingLayer = this.ways.get(getValidLayer(way.layer));
 		// TODO what about the label position?
@@ -349,10 +352,18 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 		filterTags(way.tags);
 
 		this.coordinates = way.wayNodes;
-		for (int i = 0; i < this.coordinates.length; ++i) {
-			for (int j = 0; j < this.coordinates[i].length; j += 2) {
-				this.coordinates[i][j] = scaleLongitude(this.coordinates[i][j]);
-				this.coordinates[i][j + 1] = scaleLatitude(this.coordinates[i][j + 1]);
+
+		long x = this.currentTile.getPixelX();
+		long y = this.currentTile.getPixelY();
+		long z = Tile.TILE_SIZE << this.currentTile.zoomLevel;
+
+		for (int i = 0, n = this.coordinates.length; i < n; ++i) {
+			float[] coords = this.coordinates[i];
+			for (int j = 0, m = coords.length; j < m; j += 2) {
+				coords[j] = (float) ((coords[j] / 1000000.0 + 180) / 360 * z) - x;
+
+				double sinLatitude = Math.sin(coords[j + 1] * PI180);
+				coords[j + 1] = (float) (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / PIx4) * z - y;
 			}
 		}
 		this.shapeContainer = new WayContainer(this.coordinates);
