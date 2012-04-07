@@ -19,6 +19,8 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -442,6 +444,32 @@ public final class MapFileWriter {
 			int zoomIntervalIndex, ByteBuffer tileBuffer, ByteBuffer poiDataBuffer, ByteBuffer wayDataBuffer,
 			ByteBuffer wayBuffer) {
 
+		class SortWayByTags implements Comparator<TDWay> {
+
+			@Override
+			public int compare(TDWay way1, TDWay way2) {
+				if (way1 == null)
+					return -1;
+				if (way2 == null)
+					return 1;
+
+				if (way1.getTags() == null)
+					return -1;
+				if (way2.getTags() == null)
+					return 1;
+				int len1 = way1.getTags().length;
+				int len2 = way2.getTags().length;
+				if (len1 != len2)
+					return (len1 < len2) ? -1 : 1;
+
+				for (int i = 0; i < len1; i++)
+					if (way1.getTags()[i] != way2.getTags()[i])
+						return (way1.getTags()[i] < way2.getTags()[i]) ? -1 : 1;
+
+				return 0;
+			}
+		}
+
 		tileBuffer.clear();
 		poiDataBuffer.clear();
 		wayDataBuffer.clear();
@@ -492,6 +520,7 @@ public final class MapFileWriter {
 				List<TDWay> ways = waysByZoomlevel.get(Byte.valueOf(zoomlevel));
 				if (ways != null) {
 					List<WayPreprocessingCallable> callables = new ArrayList<MapFileWriter.WayPreprocessingCallable>();
+					Collections.sort(ways, new SortWayByTags());
 					for (TDWay way : ways) {
 						if (!way.isInvalid()) {
 							callables.add(new WayPreprocessingCallable(way, tileCoordinate, maxZoomCurrentInterval,

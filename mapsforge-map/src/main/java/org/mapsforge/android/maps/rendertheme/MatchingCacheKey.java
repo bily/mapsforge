@@ -68,4 +68,24 @@ class MatchingCacheKey {
 		result = 31 * result + this.zoomLevel;
 		return result;
 	}
+
+	public boolean matches(List<Tag> tags2, byte zoomLevel2, Closed closed2) {
+		if (this.zoomLevel != zoomLevel2) {
+			return false;
+		} else if (this.closed != closed2) {
+			return false;
+		} else if (this.tags == null) {
+			return (tags2 == null);
+		}
+
+		int size;
+		if ((size = this.tags.size()) != tags2.size())
+			return false;
+
+		for (int i = 0; i < size; i++)
+			if (this.tags.get(i) != tags2.get(i))
+				return false;
+
+		return true;
+	}
 }

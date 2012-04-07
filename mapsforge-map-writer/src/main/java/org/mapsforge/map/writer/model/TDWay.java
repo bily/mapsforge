@@ -109,6 +109,8 @@ public class TDWay {
 					}
 				}
 
+				java.util.Arrays.sort(knownWayTags);
+
 				return new TDWay(way.getId(), ster.getLayer(), ster.getName(), ster.getHousenumber(), ster.getRef(),
 						knownWayTags, shape, waynodes);
 			}

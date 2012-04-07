@@ -79,6 +79,9 @@ public class RenderTheme {
 	private final LRUCache<MatchingCacheKey, List<RenderInstruction>> matchingCache;
 	private final ArrayList<Rule> rulesList;
 
+	private List<RenderInstruction> prevMatchingList;
+	private MatchingCacheKey prevMatchingCacheKey = null;
+
 	RenderTheme(int mapBackground, float baseStrokeWidth, float baseTextSize) {
 		this.mapBackground = mapBackground;
 		this.baseStrokeWidth = baseStrokeWidth;
@@ -181,9 +184,23 @@ public class RenderTheme {
 	}
 
 	private void matchWay(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel, Closed closed) {
-		MatchingCacheKey matchingCacheKey = new MatchingCacheKey(tags, zoomLevel, closed);
+		List<RenderInstruction> matchingList;
+		MatchingCacheKey matchingCacheKey;
 
-		List<RenderInstruction> matchingList = this.matchingCache.get(matchingCacheKey);
+		if (this.prevMatchingCacheKey != null && this.prevMatchingCacheKey.matches(tags, zoomLevel, closed)) {
+			if (this.prevMatchingList != null) {
+				matchingList = this.prevMatchingList;
+				for (int i = 0, n = matchingList.size(); i < n; ++i) {
+					matchingList.get(i).renderWay(renderCallback, tags);
+				}
+			}
+			return;
+		}
+		matchingCacheKey = new MatchingCacheKey(tags, zoomLevel, closed);
+		this.prevMatchingCacheKey = matchingCacheKey;
+		matchingList = this.matchingCache.get(matchingCacheKey);
+		this.prevMatchingList = matchingList;
+
 		if (matchingList != null) {
 			// cache hit
 			for (int i = 0, n = matchingList.size(); i < n; ++i) {
@@ -191,13 +208,12 @@ public class RenderTheme {
 			}
 			return;
 		}
-
 		// cache miss
 		matchingList = new ArrayList<RenderInstruction>();
 		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
 			this.rulesList.get(i).matchWay(renderCallback, tags, zoomLevel, closed, matchingList);
 		}
-
+		this.prevMatchingList = matchingList;
 		this.matchingCache.put(matchingCacheKey, matchingList);
 	}
 
