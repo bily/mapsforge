@@ -102,6 +102,8 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 	private final List<List<List<ShapePaintContainer>>> ways;
 	private final List<SymbolContainer> waySymbols;
 
+	private Tag nameTag, refTag, houseNrTag, elevationTag;
+
 	/**
 	 * Constructs a new DatabaseRenderer.
 	 */
@@ -262,8 +264,11 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 	}
 
 	@Override
-	public void renderWayText(String textKey, Paint paint, Paint outline) {
-		WayDecorator.renderText(textKey, paint, outline, this.coordinates, this.wayNames);
+	public void renderWayText(Paint paint, Paint outline) {
+		if (this.nameTag == null || this.nameTag.value == null)
+			return;
+
+		WayDecorator.renderText(this.nameTag.value, paint, outline, this.coordinates, this.wayNames);
 	}
 
 	@Override
@@ -342,6 +347,23 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 	private void renderWay(Way way) {
 		this.drawingLayer = this.ways.get(getValidLayer(way.layer));
 		// TODO what about the label position?
+
+		this.nameTag = null;
+		this.refTag = null;
+		this.houseNrTag = null;
+		this.elevationTag = null;
+
+		for (int i = way.tags.size() - 1; i >= 0; i--) {
+			Tag tag = way.tags.get(i);
+			if (Tag.TAG_KEY_NAME == tag.key)
+				this.nameTag = way.tags.remove(i);
+			else if (Tag.TAG_KEY_HOUSE_NUMBER == tag.key)
+				this.houseNrTag = way.tags.remove(i);
+			else if (Tag.TAG_KEY_ELE == tag.key)
+				this.elevationTag = way.tags.remove(i);
+			else if (Tag.TAG_KEY_REF == tag.key)
+				this.refTag = way.tags.remove(i);
+		}
 
 		this.coordinates = way.wayNodes;
 		for (int i = 0; i < this.coordinates.length; ++i) {

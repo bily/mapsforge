@@ -134,26 +134,6 @@ public class MapDatabase {
 	private static final byte SIGNATURE_LENGTH_WAY = 32;
 
 	/**
-	 * The key of the elevation OpenStreetMap tag.
-	 */
-	private static final String TAG_KEY_ELE = "ele";
-
-	/**
-	 * The key of the house number OpenStreetMap tag.
-	 */
-	private static final String TAG_KEY_HOUSE_NUMBER = "addr:housenumber";
-
-	/**
-	 * The key of the name OpenStreetMap tag.
-	 */
-	private static final String TAG_KEY_NAME = "name";
-
-	/**
-	 * The key of the reference OpenStreetMap tag.
-	 */
-	private static final String TAG_KEY_REF = "ref";
-
-	/**
 	 * Bitmask for the optional way data blocks byte.
 	 */
 	private static final int WAY_FEATURE_DATA_BLOCKS_BYTE = 0x08;
@@ -633,17 +613,17 @@ public class MapDatabase {
 
 			// check if the POI has a name
 			if (featureName) {
-				tags.add(new Tag(TAG_KEY_NAME, this.readBuffer.readUTF8EncodedString()));
+				tags.add(new Tag(Tag.TAG_KEY_NAME, this.readBuffer.readUTF8EncodedString()));
 			}
 
 			// check if the POI has a house number
 			if (featureHouseNumber) {
-				tags.add(new Tag(TAG_KEY_HOUSE_NUMBER, this.readBuffer.readUTF8EncodedString()));
+				tags.add(new Tag(Tag.TAG_KEY_HOUSE_NUMBER, this.readBuffer.readUTF8EncodedString()));
 			}
 
 			// check if the POI has an elevation
 			if (featureElevation) {
-				tags.add(new Tag(TAG_KEY_ELE, Integer.toString(this.readBuffer.readSignedInt())));
+				tags.add(new Tag(Tag.TAG_KEY_ELE, Integer.toString(this.readBuffer.readSignedInt())));
 			}
 
 			pois.add(new PointOfInterest(layer, tags, new GeoPoint(latitude, longitude)));
@@ -764,17 +744,17 @@ public class MapDatabase {
 
 			// check if the way has a name
 			if (featureName) {
-				tags.add(new Tag(TAG_KEY_NAME, this.readBuffer.readUTF8EncodedString()));
+				tags.add(new Tag(Tag.TAG_KEY_NAME, this.readBuffer.readUTF8EncodedString()));
 			}
 
 			// check if the way has a house number
 			if (featureHouseNumber) {
-				tags.add(new Tag(TAG_KEY_HOUSE_NUMBER, this.readBuffer.readUTF8EncodedString()));
+				tags.add(new Tag(Tag.TAG_KEY_HOUSE_NUMBER, this.readBuffer.readUTF8EncodedString()));
 			}
 
 			// check if the way has a reference
 			if (featureRef) {
-				tags.add(new Tag(TAG_KEY_REF, this.readBuffer.readUTF8EncodedString()));
+				tags.add(new Tag(Tag.TAG_KEY_REF, this.readBuffer.readUTF8EncodedString()));
 			}
 
 			GeoPoint labelPosition = readOptionalLabelPosition(featureLabelPosition);

@@ -123,11 +123,7 @@ public final class PathText implements RenderInstruction {
 
 	@Override
 	public void renderWay(RenderCallback renderCallback, List<Tag> tags) {
-		String caption = this.textKey.getValue(tags);
-		if (caption == null) {
-			return;
-		}
-		renderCallback.renderWayText(caption, this.paint, this.stroke);
+		renderCallback.renderWayText(this.paint, this.stroke);
 	}
 
 	@Override

@@ -26,6 +26,26 @@ public class Tag implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/**
+	 * The key of the elevation OpenStreetMap tag.
+	 */
+	public static final String TAG_KEY_ELE = "ele";
+
+	/**
+	 * The key of the house number OpenStreetMap tag.
+	 */
+	public static final String TAG_KEY_HOUSE_NUMBER = "addr:housenumber";
+
+	/**
+	 * The key of the name OpenStreetMap tag.
+	 */
+	public static final String TAG_KEY_NAME = "name";
+
+	/**
+	 * The key of the reference OpenStreetMap tag.
+	 */
+	public static final String TAG_KEY_REF = "ref";
+
+	/**
 	 * The key of this tag.
 	 */
 	public final String key;

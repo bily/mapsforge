@@ -119,5 +119,5 @@ public interface RenderCallback {
 	 * @param stroke
 	 *            an optional paint for the text casing (may be null).
 	 */
-	void renderWayText(String text, Paint paint, Paint stroke);
+	void renderWayText(Paint paint, Paint stroke);
 }
