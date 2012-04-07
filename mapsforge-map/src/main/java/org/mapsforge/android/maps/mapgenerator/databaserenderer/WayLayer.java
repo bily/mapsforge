@@ -14,10 +14,10 @@
  */
 package org.mapsforge.android.maps.mapgenerator.databaserenderer;
 
-public class WayLayer {
-	public final boolean[] levelActive;
-	public final WayLevel[] wayLevels;
-	public final int levels;
+class WayLayer {
+	final boolean[] levelActive;
+	final WayLevel[] wayLevels;
+	final int levels;
 
 	WayLayer(int levels) {
 		this.levels = levels;
@@ -25,11 +25,7 @@ public class WayLayer {
 		this.levelActive = new boolean[this.levels];
 	}
 
-	/**
-	 * @param level
-	 * @return
-	 */
-	public WayLevel get(int level) {
+	WayLevel get(int level) {
 		WayLevel wayLevel = this.wayLevels[level];
 
 		if (wayLevel == null)
@@ -39,10 +35,7 @@ public class WayLayer {
 		return wayLevel;
 	}
 
-	/**
-	 * 
-	 */
-	public void clear() {
+	void clear() {
 		for (int i = this.levels - 1; i >= 0; i--)
 			if (this.levelActive[i]) {
 				this.levelActive[i] = false;

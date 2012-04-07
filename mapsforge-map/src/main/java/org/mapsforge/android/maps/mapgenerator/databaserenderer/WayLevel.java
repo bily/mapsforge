@@ -18,29 +18,17 @@ import java.util.ArrayList;
 
 import android.graphics.Paint;
 
-/**
- * @author jeff
- */
-public class WayLevel {
-	/**
-	 * 
-	 */
-	public final ArrayList<Paint> paints;
-	/**
-	 * 
-	 */
-	public final ArrayList<ShapeContainer> shapeContainers;
+class WayLevel {
+
+	final ArrayList<Paint> paints;
+	final ArrayList<ShapeContainer> shapeContainers;
 
 	WayLevel() {
 		this.shapeContainers = new ArrayList<ShapeContainer>();
 		this.paints = new ArrayList<Paint>();
 	}
 
-	/**
-	 * @param shapeContainer
-	 * @param paint
-	 */
-	public void add(ShapeContainer shapeContainer, Paint paint) {
+	void add(ShapeContainer shapeContainer, Paint paint) {
 		boolean found = false;
 		for (int i = this.paints.size() - 1; i >= 0; i--) {
 			if (this.paints.get(i) == paint) {
@@ -54,10 +42,7 @@ public class WayLevel {
 		this.shapeContainers.add(shapeContainer);
 	}
 
-	/**
-	 * 
-	 */
-	public void clear() {
+	void clear() {
 		this.shapeContainers.clear();
 		this.paints.clear();
 	}
