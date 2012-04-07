@@ -50,8 +50,12 @@ public interface RenderCallback {
 	 * 
 	 * @param symbol
 	 *            the symbol to be rendered.
+	 * @param width
+	 *            width of the bitmap
+	 * @param height
+	 *            height of the bitmap
 	 */
-	void renderAreaSymbol(Bitmap symbol);
+	void renderAreaSymbol(Bitmap symbol, int width, int height);
 
 	/**
 	 * Renders a point of interest caption with the given text.
@@ -84,8 +88,12 @@ public interface RenderCallback {
 	 * 
 	 * @param symbol
 	 *            the symbol to be rendered.
+	 * @param width
+	 *            width of the bitmap
+	 * @param height
+	 *            height of the bitmap
 	 */
-	void renderPointOfInterestSymbol(Bitmap symbol);
+	void renderPointOfInterestSymbol(Bitmap symbol, int width, int height);
 
 	/**
 	 * Renders a way with the given parameters.
@@ -112,12 +120,12 @@ public interface RenderCallback {
 	/**
 	 * Renders a way with the given text along the way path.
 	 * 
-	 * @param text
+	 * @param textKey
 	 *            the text to be rendered.
 	 * @param paint
 	 *            the paint to be used for rendering the text.
 	 * @param stroke
 	 *            an optional paint for the text casing (may be null).
 	 */
-	void renderWayText(Paint paint, Paint stroke);
+	void renderWayText(String textKey, Paint paint, Paint stroke);
 }

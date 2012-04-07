@@ -40,7 +40,7 @@ public final class PathText implements RenderInstruction {
 	 * @return a new PathText with the given rendering attributes.
 	 */
 	public static PathText create(String elementName, Attributes attributes) {
-		TextKey textKey = null;
+		String textKey = null;
 		FontFamily fontFamily = FontFamily.DEFAULT;
 		FontStyle fontStyle = FontStyle.NORMAL;
 		float fontSize = 0;
@@ -76,7 +76,7 @@ public final class PathText implements RenderInstruction {
 		return new PathText(textKey, typeface, fontSize, fill, stroke, strokeWidth);
 	}
 
-	private static void validate(String elementName, TextKey textKey, float fontSize, float strokeWidth) {
+	private static void validate(String elementName, String textKey, float fontSize, float strokeWidth) {
 		if (textKey == null) {
 			throw new IllegalArgumentException("missing attribute k for element: " + elementName);
 		} else if (fontSize < 0) {
@@ -89,9 +89,9 @@ public final class PathText implements RenderInstruction {
 	private final float fontSize;
 	private final Paint paint;
 	private final Paint stroke;
-	private final TextKey textKey;
+	private final String textKey;
 
-	private PathText(TextKey textKey, Typeface typeface, float fontSize, int fill, int stroke, float strokeWidth) {
+	private PathText(String textKey, Typeface typeface, float fontSize, int fill, int stroke, float strokeWidth) {
 		super();
 
 		this.textKey = textKey;
@@ -123,7 +123,7 @@ public final class PathText implements RenderInstruction {
 
 	@Override
 	public void renderWay(RenderCallback renderCallback, List<Tag> tags) {
-		renderCallback.renderWayText(this.paint, this.stroke);
+		renderCallback.renderWayText(this.textKey, this.paint, this.stroke);
 	}
 
 	@Override

@@ -224,20 +224,27 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 	}
 
 	@Override
-	public void renderAreaCaption(String caption, float verticalOffset, Paint paint, Paint stroke) {
+	public void renderAreaCaption(String textKey, float verticalOffset, Paint paint, Paint stroke) {
+		String caption = getTextTagValue(textKey);
+		if (caption == null)
+			return;
+
 		float[] centerPosition = GeometryUtils.calculateCenterOfBoundingBox(this.coordinates[0]);
 		this.areaLabels.add(new PointTextContainer(caption, centerPosition[0], centerPosition[1], paint, stroke));
 	}
 
 	@Override
-	public void renderAreaSymbol(Bitmap symbol) {
+	public void renderAreaSymbol(Bitmap symbol, int width, int height) {
 		float[] centerPosition = GeometryUtils.calculateCenterOfBoundingBox(this.coordinates[0]);
-		this.pointSymbols.add(new SymbolContainer(symbol, centerPosition[0] - (symbol.getWidth() >> 1),
-				centerPosition[1] - (symbol.getHeight() >> 1)));
+		this.pointSymbols.add(new SymbolContainer(symbol, centerPosition[0] - (width >> 1), centerPosition[1]
+				- (height >> 1)));
 	}
 
 	@Override
-	public void renderPointOfInterestCaption(String caption, float verticalOffset, Paint paint, Paint stroke) {
+	public void renderPointOfInterestCaption(String textKey, float verticalOffset, Paint paint, Paint stroke) {
+		String caption = getTextTagValue(textKey);
+		if (caption == null)
+			return;
 		this.nodes.add(new PointTextContainer(caption, this.poiX, this.poiY + verticalOffset, paint, stroke));
 	}
 
@@ -247,9 +254,8 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 	}
 
 	@Override
-	public void renderPointOfInterestSymbol(Bitmap symbol) {
-		this.pointSymbols.add(new SymbolContainer(symbol, this.poiX - (symbol.getWidth() >> 1), this.poiY
-				- (symbol.getHeight() >> 1)));
+	public void renderPointOfInterestSymbol(Bitmap symbol, int width, int height) {
+		this.pointSymbols.add(new SymbolContainer(symbol, this.poiX - (width >> 1), this.poiY - (height >> 1)));
 	}
 
 	@Override
@@ -263,11 +269,10 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 	}
 
 	@Override
-	public void renderWayText(Paint paint, Paint outline) {
-		if (this.nameTag == null || this.nameTag.value == null)
-			return;
-
-		WayDecorator.renderText(this.nameTag.value, paint, outline, this.coordinates, this.wayNames);
+	public void renderWayText(String textKey, Paint paint, Paint outline) {
+		String text = getTextTagValue(textKey);
+		if (text != null)
+			WayDecorator.renderText(text, paint, outline, this.coordinates, this.wayNames);
 	}
 
 	@Override
@@ -326,6 +331,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 		this.drawingLayer = this.ways.get(getValidLayer(pointOfInterest.layer));
 		this.poiX = scaleLongitude(pointOfInterest.position.longitudeE6);
 		this.poiY = scaleLatitude(pointOfInterest.position.latitudeE6);
+		filterTags(pointOfInterest.tags);
 		this.renderTheme.matchNode(this, pointOfInterest.tags, this.currentTile.zoomLevel);
 	}
 
@@ -340,27 +346,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 		this.drawingLayer = this.ways.get(getValidLayer(way.layer));
 		// TODO what about the label position?
 
-		this.nameTag = null;
-		this.refTag = null;
-		this.houseNrTag = null;
-		this.elevationTag = null;
-
-		// filter out 'individual' tags before passing tag list
-		// to RenderTheme matcher
-		for (int i = way.tags.size() - 1; i >= 0; i--) {
-			Tag tag = way.tags.get(i);
-			if (Tag.TAG_KEY_NAME == tag.key)
-				this.nameTag = way.tags.remove(i);
-			else if (Tag.TAG_KEY_HOUSE_NUMBER == tag.key)
-				this.houseNrTag = way.tags.remove(i);
-			else if (Tag.TAG_KEY_ELE == tag.key)
-				this.elevationTag = way.tags.remove(i);
-			else if (Tag.TAG_KEY_REF == tag.key)
-				this.refTag = way.tags.remove(i);
-			else
-				// all individual tags are at the end of tag list
-				break;
-		}
+		filterTags(way.tags);
 
 		this.coordinates = way.wayNodes;
 		for (int i = 0; i < this.coordinates.length; ++i) {
@@ -375,6 +361,30 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 			this.renderTheme.matchClosedWay(this, way.tags, this.currentTile.zoomLevel);
 		} else {
 			this.renderTheme.matchLinearWay(this, way.tags, this.currentTile.zoomLevel);
+		}
+	}
+
+	private void filterTags(List<Tag> tags) {
+		this.nameTag = null;
+		this.refTag = null;
+		this.houseNrTag = null;
+		this.elevationTag = null;
+
+		// filter out 'individual' tags before passing tag list
+		// to RenderTheme matcher
+		for (int i = tags.size() - 1; i >= 0; i--) {
+			Tag tag = tags.get(i);
+			if (Tag.TAG_KEY_NAME == tag.key)
+				this.nameTag = tags.remove(i);
+			else if (Tag.TAG_KEY_HOUSE_NUMBER == tag.key)
+				this.houseNrTag = tags.remove(i);
+			else if (Tag.TAG_KEY_ELE == tag.key)
+				this.elevationTag = tags.remove(i);
+			else if (Tag.TAG_KEY_REF == tag.key)
+				this.refTag = tags.remove(i);
+			else
+				// all individual tags are at the end of tag list
+				break;
 		}
 	}
 
@@ -411,5 +421,22 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 	private void setScaleStrokeWidth(byte zoomLevel) {
 		int zoomLevelDiff = Math.max(zoomLevel - STROKE_MIN_ZOOM_LEVEL, 0);
 		this.renderTheme.scaleStrokeWidth((float) Math.pow(STROKE_INCREASE, zoomLevelDiff));
+	}
+
+	private String getTextTagValue(String textKey) {
+		Tag tag = null;
+		if (textKey == Tag.TAG_KEY_NAME)
+			tag = this.nameTag;
+		else if (textKey == Tag.TAG_KEY_HOUSE_NUMBER)
+			tag = this.houseNrTag;
+		else if (textKey == Tag.TAG_KEY_REF)
+			tag = this.refTag;
+		else if (textKey == Tag.TAG_KEY_ELE)
+			tag = this.elevationTag;
+
+		if (tag != null)
+			return tag.value;
+
+		return null;
 	}
 }

@@ -76,25 +76,37 @@ public class RenderTheme {
 	private final float baseTextSize;
 	private int levels;
 	private final int mapBackground;
-	private final LRUCache<MatchingCacheKey, List<RenderInstruction>> matchingCache;
+	private final LRUCache<MatchingCacheKey, List<RenderInstruction>> matchingCacheNodes;
+	private final LRUCache<MatchingCacheKey, List<RenderInstruction>> matchingCacheWay;
+	private final LRUCache<MatchingCacheKey, List<RenderInstruction>> matchingCacheArea;
 	private final ArrayList<Rule> rulesList;
 
-	private List<RenderInstruction> prevMatchingList;
-	private MatchingCacheKey prevMatchingCacheKey = null;
+	private List<RenderInstruction> matchingListWay;
+	private List<RenderInstruction> matchingListArea;
+	private List<RenderInstruction> matchingListNode;
+
+	private MatchingCacheKey matchingCacheKeyWay = null;
+	private MatchingCacheKey matchingCacheKeyArea = null;
+	private MatchingCacheKey matchingCacheKeyNode = null;
 
 	RenderTheme(int mapBackground, float baseStrokeWidth, float baseTextSize) {
 		this.mapBackground = mapBackground;
 		this.baseStrokeWidth = baseStrokeWidth;
 		this.baseTextSize = baseTextSize;
 		this.rulesList = new ArrayList<Rule>();
-		this.matchingCache = new LRUCache<MatchingCacheKey, List<RenderInstruction>>(MATCHING_CACHE_SIZE);
+		this.matchingCacheNodes = new LRUCache<MatchingCacheKey, List<RenderInstruction>>(MATCHING_CACHE_SIZE);
+		this.matchingCacheWay = new LRUCache<MatchingCacheKey, List<RenderInstruction>>(MATCHING_CACHE_SIZE);
+		this.matchingCacheArea = new LRUCache<MatchingCacheKey, List<RenderInstruction>>(MATCHING_CACHE_SIZE);
 	}
 
 	/**
 	 * Must be called when this RenderTheme gets destroyed to clean up and free resources.
 	 */
 	public void destroy() {
-		this.matchingCache.clear();
+		this.matchingCacheNodes.clear();
+		this.matchingCacheArea.clear();
+		this.matchingCacheWay.clear();
+
 		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
 			this.rulesList.get(i).onDestroy();
 		}
@@ -154,9 +166,36 @@ public class RenderTheme {
 	 *            the zoom level at which the node should be matched.
 	 */
 	public void matchNode(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel) {
-		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
-			this.rulesList.get(i).matchNode(renderCallback, tags, zoomLevel);
+		List<RenderInstruction> matchingList = this.matchingListNode;
+		MatchingCacheKey matchingCacheKey = this.matchingCacheKeyNode;
+
+		if (matchingCacheKey != null && matchingCacheKey.matches(tags, zoomLevel)) {
+			if (matchingList != null) {
+				for (int i = 0, n = matchingList.size(); i < n; ++i) {
+					matchingList.get(i).renderNode(renderCallback, tags);
+				}
+			}
+			return;
 		}
+		matchingCacheKey = new MatchingCacheKey(tags, zoomLevel);
+		matchingList = this.matchingCacheNodes.get(matchingCacheKey);
+
+		if (matchingList != null) {
+			// cache hit
+			for (int i = 0, n = matchingList.size(); i < n; ++i) {
+				matchingList.get(i).renderNode(renderCallback, tags);
+			}
+		} else {
+			// cache miss
+			matchingList = new ArrayList<RenderInstruction>();
+			for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
+				this.rulesList.get(i).matchNode(renderCallback, tags, zoomLevel, matchingList);
+			}
+			this.matchingCacheNodes.put(matchingCacheKey, matchingList);
+		}
+
+		this.matchingListNode = matchingList;
+		this.matchingCacheKeyNode = matchingCacheKey;
 	}
 
 	/**
@@ -185,36 +224,52 @@ public class RenderTheme {
 
 	private void matchWay(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel, Closed closed) {
 		List<RenderInstruction> matchingList;
+		LRUCache<MatchingCacheKey, List<RenderInstruction>> matchingCache;
 		MatchingCacheKey matchingCacheKey;
 
-		if (this.prevMatchingCacheKey != null && this.prevMatchingCacheKey.matches(tags, zoomLevel, closed)) {
-			if (this.prevMatchingList != null) {
-				matchingList = this.prevMatchingList;
+		if (closed == Closed.YES) {
+			matchingCache = this.matchingCacheArea;
+			matchingList = this.matchingListArea;
+			matchingCacheKey = this.matchingCacheKeyArea;
+		} else {
+			matchingCache = this.matchingCacheWay;
+			matchingList = this.matchingListWay;
+			matchingCacheKey = this.matchingCacheKeyWay;
+		}
+
+		if (matchingCacheKey != null && matchingCacheKey.matches(tags, zoomLevel)) {
+			if (matchingList != null) {
 				for (int i = 0, n = matchingList.size(); i < n; ++i) {
 					matchingList.get(i).renderWay(renderCallback, tags);
 				}
 			}
 			return;
 		}
-		matchingCacheKey = new MatchingCacheKey(tags, zoomLevel, closed);
-		this.prevMatchingCacheKey = matchingCacheKey;
-		matchingList = this.matchingCache.get(matchingCacheKey);
-		this.prevMatchingList = matchingList;
+		matchingCacheKey = new MatchingCacheKey(tags, zoomLevel);
+		matchingList = matchingCache.get(matchingCacheKey);
 
 		if (matchingList != null) {
 			// cache hit
 			for (int i = 0, n = matchingList.size(); i < n; ++i) {
 				matchingList.get(i).renderWay(renderCallback, tags);
 			}
-			return;
+
+		} else {
+			// cache miss
+			matchingList = new ArrayList<RenderInstruction>();
+			for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
+				this.rulesList.get(i).matchWay(renderCallback, tags, zoomLevel, closed, matchingList);
+			}
+			matchingCache.put(matchingCacheKey, matchingList);
 		}
-		// cache miss
-		matchingList = new ArrayList<RenderInstruction>();
-		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
-			this.rulesList.get(i).matchWay(renderCallback, tags, zoomLevel, closed, matchingList);
+
+		if (closed == Closed.YES) {
+			this.matchingListArea = matchingList;
+			this.matchingCacheKeyArea = matchingCacheKey;
+		} else {
+			this.matchingListWay = matchingList;
+			this.matchingCacheKeyWay = matchingCacheKey;
 		}
-		this.prevMatchingList = matchingList;
-		this.matchingCache.put(matchingCacheKey, matchingList);
 	}
 
 	void addRule(Rule rule) {

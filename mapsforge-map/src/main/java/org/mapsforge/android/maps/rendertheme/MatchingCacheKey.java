@@ -19,15 +19,13 @@ import java.util.List;
 import org.mapsforge.core.model.Tag;
 
 class MatchingCacheKey {
-	private final Closed closed;
 	private final int hashCodeValue;
 	private final List<Tag> tags;
 	private final byte zoomLevel;
 
-	MatchingCacheKey(List<Tag> tags, byte zoomLevel, Closed closed) {
+	MatchingCacheKey(List<Tag> tags, byte zoomLevel) {
 		this.tags = tags;
 		this.zoomLevel = zoomLevel;
-		this.closed = closed;
 		this.hashCodeValue = calculateHashCode();
 	}
 
@@ -39,11 +37,7 @@ class MatchingCacheKey {
 			return false;
 		}
 		MatchingCacheKey other = (MatchingCacheKey) obj;
-		if (this.closed == null && other.closed != null) {
-			return false;
-		} else if (this.closed != null && !this.closed.equals(other.closed)) {
-			return false;
-		} else if (this.tags == null && other.tags != null) {
+		if (this.tags == null && other.tags != null) {
 			return false;
 		} else if (this.tags != null && !this.tags.equals(other.tags)) {
 			return false;
@@ -63,16 +57,13 @@ class MatchingCacheKey {
 	 */
 	private int calculateHashCode() {
 		int result = 7;
-		result = 31 * result + ((this.closed == null) ? 0 : this.closed.hashCode());
 		result = 31 * result + ((this.tags == null) ? 0 : this.tags.hashCode());
 		result = 31 * result + this.zoomLevel;
 		return result;
 	}
 
-	public boolean matches(List<Tag> tags2, byte zoomLevel2, Closed closed2) {
+	boolean matches(List<Tag> tags2, byte zoomLevel2) {
 		if (this.zoomLevel != zoomLevel2) {
-			return false;
-		} else if (this.closed != closed2) {
 			return false;
 		} else if (this.tags == null) {
 			return (tags2 == null);

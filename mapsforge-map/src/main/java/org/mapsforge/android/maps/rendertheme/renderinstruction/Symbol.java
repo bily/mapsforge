@@ -65,11 +65,14 @@ public final class Symbol implements RenderInstruction {
 	}
 
 	private final Bitmap bitmap;
+	private final int width, height;
 
 	private Symbol(String relativePathPrefix, String src) throws IOException {
 		super();
 
 		this.bitmap = BitmapUtils.createBitmap(relativePathPrefix, src);
+		this.width = this.bitmap.getWidth();
+		this.height = this.bitmap.getHeight();
 	}
 
 	@Override
@@ -79,12 +82,12 @@ public final class Symbol implements RenderInstruction {
 
 	@Override
 	public void renderNode(RenderCallback renderCallback, List<Tag> tags) {
-		renderCallback.renderPointOfInterestSymbol(this.bitmap);
+		renderCallback.renderPointOfInterestSymbol(this.bitmap, this.width, this.height);
 	}
 
 	@Override
 	public void renderWay(RenderCallback renderCallback, List<Tag> tags) {
-		renderCallback.renderAreaSymbol(this.bitmap);
+		renderCallback.renderAreaSymbol(this.bitmap, this.width, this.height);
 	}
 
 	@Override

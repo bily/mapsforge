@@ -199,23 +199,28 @@ abstract class Rule {
 
 	abstract boolean matchesWay(List<Tag> tags, byte zoomLevel, Closed closed);
 
-	void matchNode(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel) {
+	void matchNode(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel, List<RenderInstruction> matchingList) {
+		RenderInstruction renderInstruction;
 		if (matchesNode(tags, zoomLevel)) {
 			for (int i = 0, n = this.renderInstructions.size(); i < n; ++i) {
-				this.renderInstructions.get(i).renderNode(renderCallback, tags);
+				renderInstruction = this.renderInstructions.get(i);
+				renderInstruction.renderNode(renderCallback, tags);
+				matchingList.add(renderInstruction);
 			}
 			for (int i = 0, n = this.subRules.size(); i < n; ++i) {
-				this.subRules.get(i).matchNode(renderCallback, tags, zoomLevel);
+				this.subRules.get(i).matchNode(renderCallback, tags, zoomLevel, matchingList);
 			}
 		}
 	}
 
 	void matchWay(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel, Closed closed,
 			List<RenderInstruction> matchingList) {
+		RenderInstruction renderInstruction;
 		if (matchesWay(tags, zoomLevel, closed)) {
 			for (int i = 0, n = this.renderInstructions.size(); i < n; ++i) {
-				this.renderInstructions.get(i).renderWay(renderCallback, tags);
-				matchingList.add(this.renderInstructions.get(i));
+				renderInstruction = this.renderInstructions.get(i);
+				renderInstruction.renderWay(renderCallback, tags);
+				matchingList.add(renderInstruction);
 			}
 			for (int i = 0, n = this.subRules.size(); i < n; ++i) {
 				this.subRules.get(i).matchWay(renderCallback, tags, zoomLevel, closed, matchingList);

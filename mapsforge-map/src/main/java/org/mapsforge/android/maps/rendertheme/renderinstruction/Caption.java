@@ -40,7 +40,7 @@ public final class Caption implements RenderInstruction {
 	 * @return a new Caption with the given rendering attributes.
 	 */
 	public static Caption create(String elementName, Attributes attributes) {
-		TextKey textKey = null;
+		String textKey = null;
 		float dy = 0;
 		FontFamily fontFamily = FontFamily.DEFAULT;
 		FontStyle fontStyle = FontStyle.NORMAL;
@@ -79,7 +79,7 @@ public final class Caption implements RenderInstruction {
 		return new Caption(textKey, dy, typeface, fontSize, fill, stroke, strokeWidth);
 	}
 
-	private static void validate(String elementName, TextKey textKey, float fontSize, float strokeWidth) {
+	private static void validate(String elementName, String textKey, float fontSize, float strokeWidth) {
 		if (textKey == null) {
 			throw new IllegalArgumentException("missing attribute k for element: " + elementName);
 		} else if (fontSize < 0) {
@@ -93,10 +93,9 @@ public final class Caption implements RenderInstruction {
 	private final float fontSize;
 	private final Paint paint;
 	private final Paint stroke;
-	private final TextKey textKey;
+	private final String textKey;
 
-	private Caption(TextKey textKey, float dy, Typeface typeface, float fontSize, int fill, int stroke,
-			float strokeWidth) {
+	private Caption(String textKey, float dy, Typeface typeface, float fontSize, int fill, int stroke, float strokeWidth) {
 		super();
 
 		this.textKey = textKey;
@@ -124,20 +123,12 @@ public final class Caption implements RenderInstruction {
 
 	@Override
 	public void renderNode(RenderCallback renderCallback, List<Tag> tags) {
-		String caption = this.textKey.getValue(tags);
-		if (caption == null) {
-			return;
-		}
-		renderCallback.renderPointOfInterestCaption(caption, this.dy, this.paint, this.stroke);
+		renderCallback.renderPointOfInterestCaption(this.textKey, this.dy, this.paint, this.stroke);
 	}
 
 	@Override
 	public void renderWay(RenderCallback renderCallback, List<Tag> tags) {
-		String caption = this.textKey.getValue(tags);
-		if (caption == null) {
-			return;
-		}
-		renderCallback.renderAreaCaption(caption, this.dy, this.paint, this.stroke);
+		renderCallback.renderAreaCaption(this.textKey, this.dy, this.paint, this.stroke);
 	}
 
 	@Override
