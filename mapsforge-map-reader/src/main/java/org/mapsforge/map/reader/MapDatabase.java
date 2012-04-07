@@ -189,6 +189,8 @@ public class MapDatabase {
 	private int tileLatitude;
 	private int tileLongitude;
 
+	private final int[] intBuffer = new int[256];
+
 	/**
 	 * Closes the map file and destroys all internal caches. Has no effect if no map file is currently opened.
 	 */
@@ -310,34 +312,46 @@ public class MapDatabase {
 	}
 
 	private void decodeWayNodesDoubleDelta(float[] waySegment) {
+		int[] buffer = this.intBuffer;
+		int bufferLength = buffer.length;
+		int length = waySegment.length;
+		int cnt = length;
+		if (cnt > bufferLength)
+			cnt = bufferLength;
+
+		this.readBuffer.readSignedInt(buffer, cnt);
+
 		// get the first way node latitude offset (VBE-S)
-		int wayNodeLatitude = this.tileLatitude + this.readBuffer.readSignedInt();
+		int wayNodeLatitude = this.tileLatitude + buffer[0];
 
 		// get the first way node longitude offset (VBE-S)
-		int wayNodeLongitude = this.tileLongitude + this.readBuffer.readSignedInt();
+		int wayNodeLongitude = this.tileLongitude + buffer[1];
 
 		// store the first way node
-		waySegment[1] = wayNodeLatitude;
 		waySegment[0] = wayNodeLongitude;
+		waySegment[1] = wayNodeLatitude;
 
 		int previousSingleDeltaLatitude = 0;
 		int previousSingleDeltaLongitude = 0;
 
-		for (int wayNodesIndex = 2; wayNodesIndex < waySegment.length; wayNodesIndex += 2) {
-			// get the way node latitude double-delta offset (VBE-S)
-			int doubleDeltaLatitude = this.readBuffer.readSignedInt();
+		for (int wayNodesIndex = 2, pos = 2; wayNodesIndex < length; wayNodesIndex += 2, pos += 2) {
+			if (pos == bufferLength) {
 
-			// get the way node longitude double-delta offset (VBE-S)
-			int doubleDeltaLongitude = this.readBuffer.readSignedInt();
+				pos = 0;
+				cnt = length - wayNodesIndex;
+				if (cnt > bufferLength)
+					cnt = bufferLength;
+				this.readBuffer.readSignedInt(buffer, cnt);
+			}
 
-			int singleDeltaLatitude = doubleDeltaLatitude + previousSingleDeltaLatitude;
-			int singleDeltaLongitude = doubleDeltaLongitude + previousSingleDeltaLongitude;
+			int singleDeltaLatitude = buffer[pos] + previousSingleDeltaLatitude;
+			int singleDeltaLongitude = buffer[pos + 1] + previousSingleDeltaLongitude;
 
 			wayNodeLatitude = wayNodeLatitude + singleDeltaLatitude;
 			wayNodeLongitude = wayNodeLongitude + singleDeltaLongitude;
 
-			waySegment[wayNodesIndex + 1] = wayNodeLatitude;
 			waySegment[wayNodesIndex] = wayNodeLongitude;
+			waySegment[wayNodesIndex + 1] = wayNodeLatitude;
 
 			previousSingleDeltaLatitude = singleDeltaLatitude;
 			previousSingleDeltaLongitude = singleDeltaLongitude;
@@ -345,25 +359,41 @@ public class MapDatabase {
 	}
 
 	private void decodeWayNodesSingleDelta(float[] waySegment) {
+		int[] buffer = this.intBuffer;
+		int bufferLength = buffer.length;
+		int length = waySegment.length;
+		int cnt = length;
+		if (cnt > bufferLength)
+			cnt = bufferLength;
+
+		this.readBuffer.readSignedInt(buffer, cnt);
+
 		// get the first way node latitude single-delta offset (VBE-S)
-		int wayNodeLatitude = this.tileLatitude + this.readBuffer.readSignedInt();
+		int wayNodeLatitude = this.tileLatitude + buffer[0];
 
 		// get the first way node longitude single-delta offset (VBE-S)
-		int wayNodeLongitude = this.tileLongitude + this.readBuffer.readSignedInt();
+		int wayNodeLongitude = this.tileLongitude + buffer[1];
 
 		// store the first way node
-		waySegment[1] = wayNodeLatitude;
 		waySegment[0] = wayNodeLongitude;
+		waySegment[1] = wayNodeLatitude;
 
-		for (int wayNodesIndex = 2; wayNodesIndex < waySegment.length; wayNodesIndex += 2) {
+		for (int wayNodesIndex = 2, pos = 2; wayNodesIndex < length; wayNodesIndex += 2, pos += 2) {
+			if (pos == bufferLength) {
+				pos = 0;
+				cnt = length - wayNodesIndex;
+				if (cnt > bufferLength)
+					cnt = bufferLength;
+				this.readBuffer.readSignedInt(buffer, cnt);
+			}
 			// get the way node latitude offset (VBE-S)
-			wayNodeLatitude = wayNodeLatitude + this.readBuffer.readSignedInt();
+			wayNodeLatitude = wayNodeLatitude + buffer[pos];
 
 			// get the way node longitude offset (VBE-S)
-			wayNodeLongitude = wayNodeLongitude + this.readBuffer.readSignedInt();
+			wayNodeLongitude = wayNodeLongitude + buffer[pos + 1];
 
-			waySegment[wayNodesIndex + 1] = wayNodeLatitude;
 			waySegment[wayNodesIndex] = wayNodeLongitude;
+			waySegment[wayNodesIndex + 1] = wayNodeLatitude;
 		}
 	}
 

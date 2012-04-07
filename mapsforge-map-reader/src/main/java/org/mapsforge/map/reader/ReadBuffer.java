@@ -220,4 +220,70 @@ public class ReadBuffer {
 	void skipBytes(int bytes) {
 		this.bufferPosition += bytes;
 	}
+
+	public void readSignedInt(int[] values, int length) {
+		int variableByteDecode;
+		int pos = this.bufferPosition;
+		byte[] data = this.bufferData;
+		int i = 0;
+
+		for (; i < length; i++) {
+
+			if ((data[pos] & 0x80) == 0) {
+				if ((data[pos] & 0x40) != 0) {
+					values[i] = -(data[pos++] & 0x3f);
+				} else {
+					values[i] = (data[pos++] & 0x3f);
+				}
+				continue;
+			}
+
+			variableByteDecode = (data[pos++] & 0x7f);
+
+			if ((data[pos] & 0x80) == 0) {
+
+				if ((data[pos] & 0x40) != 0) {
+					values[i] = -(variableByteDecode | ((data[pos++] & 0x3f) << 7));
+				} else {
+					values[i] = variableByteDecode | ((data[pos++] & 0x3f) << 7);
+				}
+				continue;
+			}
+
+			variableByteDecode |= (data[pos++] & 0x7f) << 7;
+
+			if ((data[pos] & 0x80) == 0) {
+
+				if ((data[pos] & 0x40) != 0) {
+					values[i] = -(variableByteDecode | ((data[pos++] & 0x3f) << 14));
+				} else {
+					values[i] = variableByteDecode | ((data[pos++] & 0x3f) << 14);
+				}
+				continue;
+			}
+
+			variableByteDecode |= (data[pos++] & 0x7f) << 14;
+
+			if ((data[pos] & 0x80) == 0) {
+
+				if ((data[pos] & 0x40) != 0) {
+					values[i] = -(variableByteDecode | ((data[pos++] & 0x3f) << 21));
+				} else {
+					values[i] = variableByteDecode | ((data[pos++] & 0x3f) << 21);
+				}
+				continue;
+			}
+
+			variableByteDecode |= (data[pos++] & 0x7f) << 21;
+
+			if ((data[pos] & 0x40) != 0) {
+				values[i] = -(variableByteDecode | ((data[pos++] & 0x3f) << 28));
+			} else {
+				values[i] = variableByteDecode | ((data[pos++] & 0x3f) << 28);
+			}
+		}
+
+		this.bufferPosition = pos;
+	}
+
 }
