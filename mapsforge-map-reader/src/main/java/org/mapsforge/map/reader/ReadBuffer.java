@@ -221,6 +221,12 @@ public class ReadBuffer {
 		this.bufferPosition += bytes;
 	}
 
+	/**
+	 * @param values
+	 *            buffer to write length amount values to
+	 * @param length
+	 *            number of values to read
+	 */
 	public void readSignedInt(int[] values, int length) {
 		int variableByteDecode;
 		int pos = this.bufferPosition;
