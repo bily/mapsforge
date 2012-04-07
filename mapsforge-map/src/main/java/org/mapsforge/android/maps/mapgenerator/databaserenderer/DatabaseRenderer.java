@@ -85,7 +85,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 	private final CanvasRasterer canvasRasterer;
 	private float[][] coordinates;
 	private Tile currentTile;
-	private List<List<ShapePaintContainer>> drawingLayer;
+	private WayLayer drawingLayer;
 	private final LabelPlacement labelPlacement;
 	private MapDatabase mapDatabase;
 	private List<PointTextContainer> nodes;
@@ -99,7 +99,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 	private ShapeContainer shapeContainer;
 	private final List<Tag> tagList;
 	private final List<WayTextContainer> wayNames;
-	private final List<List<List<ShapePaintContainer>>> ways;
+	private final List<WayLayer> ways;
 	private final List<SymbolContainer> waySymbols;
 
 	private Tag nameTag, refTag, houseNrTag, elevationTag;
@@ -111,7 +111,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 		this.canvasRasterer = new CanvasRasterer();
 		this.labelPlacement = new LabelPlacement();
 
-		this.ways = new ArrayList<List<List<ShapePaintContainer>>>(LAYERS);
+		this.ways = new ArrayList<WayLayer>(LAYERS);
 		this.wayNames = new ArrayList<WayTextContainer>(64);
 		this.nodes = new ArrayList<PointTextContainer>(64);
 		this.areaLabels = new ArrayList<PointTextContainer>(64);
@@ -220,7 +220,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 
 	@Override
 	public void renderArea(Paint paint, int level) {
-		this.drawingLayer.get(level).add(new ShapePaintContainer(this.shapeContainer, paint));
+		this.drawingLayer.get(level).add(this.shapeContainer, paint);
 	}
 
 	@Override
@@ -243,8 +243,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 
 	@Override
 	public void renderPointOfInterestCircle(float radius, Paint outline, int level) {
-		this.drawingLayer.get(level).add(
-				new ShapePaintContainer(new CircleContainer(this.poiX, this.poiY, radius), outline));
+		this.drawingLayer.get(level).add(new CircleContainer(this.poiX, this.poiY, radius), outline);
 	}
 
 	@Override
@@ -255,7 +254,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 
 	@Override
 	public void renderWay(Paint paint, int level) {
-		this.drawingLayer.get(level).add(new ShapePaintContainer(this.shapeContainer, paint));
+		this.drawingLayer.get(level).add(this.shapeContainer, paint);
 	}
 
 	@Override
@@ -286,10 +285,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 
 	private void clearLists() {
 		for (int i = this.ways.size() - 1; i >= 0; --i) {
-			List<List<ShapePaintContainer>> innerWayList = this.ways.get(i);
-			for (int j = innerWayList.size() - 1; j >= 0; --j) {
-				innerWayList.get(j).clear();
-			}
+			this.ways.get(i).clear();
 		}
 
 		this.areaLabels.clear();
@@ -304,11 +300,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 		this.ways.clear();
 
 		for (byte i = LAYERS - 1; i >= 0; --i) {
-			List<List<ShapePaintContainer>> innerWayList = new ArrayList<List<ShapePaintContainer>>(levels);
-			for (int j = levels - 1; j >= 0; --j) {
-				innerWayList.add(new ArrayList<ShapePaintContainer>(0));
-			}
-			this.ways.add(innerWayList);
+			this.ways.add(new WayLayer(levels));
 		}
 	}
 

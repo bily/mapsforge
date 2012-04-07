@@ -123,28 +123,27 @@ class CanvasRasterer {
 		}
 	}
 
-	void drawWays(List<List<List<ShapePaintContainer>>> drawWays) {
-		int levelsPerLayer = drawWays.get(0).size();
+	void drawWays(List<WayLayer> drawWays) {
+		int levelsPerLayer = drawWays.get(0).levels;
 
 		for (int layer = 0, layers = drawWays.size(); layer < layers; ++layer) {
-			List<List<ShapePaintContainer>> shapePaintContainers = drawWays.get(layer);
+			WayLayer wayLayer = drawWays.get(layer);
 
 			for (int level = 0; level < levelsPerLayer; ++level) {
-				List<ShapePaintContainer> wayList = shapePaintContainers.get(level);
+				if (!wayLayer.levelActive[level])
+					continue;
+
+				WayLevel wayLevel = wayLayer.get(level);
+
+				List<ShapeContainer> wayList = wayLevel.shapeContainers;
 
 				for (int index = wayList.size() - 1; index >= 0; --index) {
-					ShapePaintContainer shapePaintContainer = wayList.get(index);
+					ShapeContainer shapeContainer = wayList.get(index);
 					this.path.rewind();
 
-					switch (shapePaintContainer.shapeContainer.getShapeType()) {
-						case CIRCLE:
-							CircleContainer circleContainer = (CircleContainer) shapePaintContainer.shapeContainer;
-							this.path.addCircle(circleContainer.x, circleContainer.y, circleContainer.radius,
-									Path.Direction.CCW);
-							break;
-
+					switch (shapeContainer.getShapeType()) {
 						case WAY:
-							WayContainer wayContainer = (WayContainer) shapePaintContainer.shapeContainer;
+							WayContainer wayContainer = (WayContainer) shapeContainer;
 							float[][] coordinates = wayContainer.coordinates;
 							for (int j = 0; j < coordinates.length; ++j) {
 								// make sure that the coordinates sequence is not empty
@@ -156,8 +155,15 @@ class CanvasRasterer {
 								}
 							}
 							break;
+						case CIRCLE:
+							CircleContainer circleContainer = (CircleContainer) shapeContainer;
+							this.path.addCircle(circleContainer.x, circleContainer.y, circleContainer.radius,
+									Path.Direction.CCW);
+							break;
+
 					}
-					this.canvas.drawPath(this.path, shapePaintContainer.paint);
+					for (int i = wayLevel.paints.size() - 1; i >= 0; i--)
+						this.canvas.drawPath(this.path, wayLevel.paints.get(i));
 				}
 			}
 		}
