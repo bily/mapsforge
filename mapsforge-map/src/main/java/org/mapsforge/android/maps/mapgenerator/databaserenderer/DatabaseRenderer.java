@@ -353,6 +353,8 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 		this.houseNrTag = null;
 		this.elevationTag = null;
 
+		// filter out 'individual' tags before passing tag list
+		// to RenderTheme matcher
 		for (int i = way.tags.size() - 1; i >= 0; i--) {
 			Tag tag = way.tags.get(i);
 			if (Tag.TAG_KEY_NAME == tag.key)
@@ -363,6 +365,9 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 				this.elevationTag = way.tags.remove(i);
 			else if (Tag.TAG_KEY_REF == tag.key)
 				this.refTag = way.tags.remove(i);
+			else
+				// all individual tags are at the end of tag list
+				break;
 		}
 
 		this.coordinates = way.wayNodes;
