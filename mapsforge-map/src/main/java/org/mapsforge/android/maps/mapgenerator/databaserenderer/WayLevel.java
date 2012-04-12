@@ -20,39 +20,26 @@ import android.graphics.Paint;
 
 class WayLevel {
 
-	final ArrayList<Paint> paints;
+	final Paint[] paints;
 	final ArrayList<ShapeContainer> shapeContainers;
-	int paintCnt;
-	Paint curPaint = null;
 
 	WayLevel() {
 		this.shapeContainers = new ArrayList<ShapeContainer>();
-		this.paints = new ArrayList<Paint>();
+		this.paints = new Paint[2];
 	}
 
 	void add(ShapeContainer shapeContainer, Paint paint) {
-		if (paint != this.curPaint) {
-			boolean found = false;
-			for (int i = this.paintCnt - 1; i >= 0; i--) {
-				if (this.paints.get(i) == paint) {
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				this.paintCnt += 1;
-				this.paints.add(paint);
-				this.curPaint = paint;
-			}
-		}
+		if (this.paints[0] == null)
+			this.paints[0] = paint;
+		else if (this.paints[0] != paint)
+			this.paints[1] = paint;
 
 		this.shapeContainers.add(shapeContainer);
 	}
 
 	void clear() {
 		this.shapeContainers.clear();
-		this.paints.clear();
-		this.paintCnt = 0;
-		this.curPaint = null;
+		this.paints[0] = null;
+		this.paints[1] = null;
 	}
 }

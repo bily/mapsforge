@@ -162,8 +162,10 @@ class CanvasRasterer {
 							break;
 
 					}
-					for (int i = wayLevel.paints.size() - 1; i >= 0; i--)
-						this.canvas.drawPath(this.path, wayLevel.paints.get(i));
+
+					this.canvas.drawPath(this.path, wayLevel.paints[0]);
+					if (wayLevel.paints[1] != null)
+						this.canvas.drawPath(this.path, wayLevel.paints[1]);
 				}
 			}
 		}
