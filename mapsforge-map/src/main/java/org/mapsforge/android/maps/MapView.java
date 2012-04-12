@@ -354,6 +354,9 @@ public class MapView extends ViewGroup {
 		return this.mapMover.onTrackballEvent(motionEvent);
 	}
 
+	private long prevTileLeft = -1;
+	private long prevTileTop = -1;
+
 	/**
 	 * Calculates all necessary tiles and adds jobs accordingly.
 	 */
@@ -391,6 +394,10 @@ public class MapView extends ViewGroup {
 			cacheId = this.mapFile;
 		}
 
+		boolean changed = true;
+		if (tileLeft == this.prevTileLeft && tileTop == this.prevTileTop)
+			changed = false;
+
 		for (long tileY = tileTop; tileY <= tileBottom; ++tileY) {
 			for (long tileX = tileLeft; tileX <= tileRight; ++tileX) {
 				Tile tile = new Tile(tileX, tileY, mapPosition.zoomLevel);
@@ -406,11 +413,11 @@ public class MapView extends ViewGroup {
 					if (bitmap != null) {
 						this.frameBuffer.drawBitmap(mapGeneratorJob.tile, bitmap);
 						this.inMemoryTileCache.put(mapGeneratorJob, bitmap);
-					} else {
+					} else if (changed) {
 						// the image data could not be read from the cache
 						this.jobQueue.addJob(mapGeneratorJob);
 					}
-				} else {
+				} else if (changed) {
 					// cache miss
 					this.jobQueue.addJob(mapGeneratorJob);
 				}
